@@ -78,3 +78,18 @@ status_summary <- covid_data %>%
   )
 print(status_summary)
 
+#  EXPLORATORY DATA ANALYSIS 
+
+summary_stats <- covid_data %>%
+  group_by(Development_Status) %>%
+  summarise(
+    n_countries = n(),
+    mean_CFR = round(mean(CFR, na.rm = TRUE), 3),
+    sd_CFR = round(sd(CFR, na.rm = TRUE), 3),
+    median_CFR = round(median(CFR, na.rm = TRUE), 3),
+    min_CFR = round(min(CFR, na.rm = TRUE), 3),
+    max_CFR = round(max(CFR, na.rm = TRUE), 3),
+    IQR_CFR = round(IQR(CFR, na.rm = TRUE), 3)
+  )
+
+print(summary_stats)
