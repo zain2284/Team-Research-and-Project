@@ -13,7 +13,7 @@ library(readr)
 library(countrycode)
 library(car)        # For Levene's test
 library(effsize)    # For effect size
-library(knitr)      # For nice tables
+library(knitr)      # For tables
 
 
 #DATA LOADING AND PREPROCESSING
