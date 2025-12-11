@@ -15,9 +15,9 @@ library(car)        # For Levene's test
 library(effsize)    # For effect size
 library(knitr)      # For nice tables
 
-# ============================================================================
-# SECTION 1: DATA LOADING AND PREPROCESSING
-# ============================================================================
+
+#DATA LOADING AND PREPROCESSING
+
 
 # Setup the Path
 setwd("C:/Users/MCS/Documents/R file/")
@@ -39,9 +39,7 @@ covid_data <- covid_data %>%
     CFR = Deaths...100.Cases
   )
 
-# ============================================================================
-# SECTION 2: CLASSIFY COUNTRIES BY DEVELOPMENT STATUS
-# ============================================================================
+#CLASSIFY COUNTRIES BY DEVELOPMENT STATUS
 
 # Create a classification of developed vs developing countries
 # Using World Bank classification and common economic indicators
@@ -242,3 +240,123 @@ magnitude <- if(d_value < 0.2) "Negligible" else
   if(d_value < 0.5) "Small" else
     if(d_value < 0.8) "Medium" else "Large"
 cat("Effect size magnitude:", magnitude, "\n")
+
+
+
+# COVID-19 Case Fatality Rate Analysis
+
+
+alpha <- 0.05
+p_value <- t_test_result$p.value
+
+if(p_value < alpha) {
+  cat("DECISION: REJECT the null hypothesis (H₀)\n")
+  cat("REASON: p-value (", format.pval(p_value, digits = 4), 
+      ") < α (", alpha, ")\n")
+  cat("CONCLUSION: There is statistically significant evidence that\n")
+  cat("developed countries have a lower mean Case Fatality Rate\n")
+  cat("compared to developing countries.\n")
+} else {
+  cat("DECISION: FAIL TO REJECT the null hypothesis (H₀)\n")
+  cat("REASON: p-value (", format.pval(p_value, digits = 4), 
+      ") ≥ α (", alpha, ")\n")
+  cat("CONCLUSION: There is insufficient evidence to conclude that\n")
+  cat("developed countries have a lower mean Case Fatality Rate\n")
+  cat("compared to developing countries.\n")
+}
+
+
+#ADDITIONAL ANALYSIS
+
+
+cat("\n", strrep("=", 60), "\n", sep = "")
+cat("ADDITIONAL INSIGHTS\n")
+cat(strrep("=", 60), "\n\n", sep = "")
+
+
+# Top 10 countries by CFR
+cat("Top 10 countries with highest CFR:\n")
+top_cfr <- covid_data %>%
+  arrange(desc(CFR)) %>%
+  select(Country, CFR, Development_Status, Confirmed, Deaths) %>%
+  head(10)
+print(top_cfr)
+
+# CFR by WHO Region
+cat("\nMean CFR by WHO Region:\n")
+covid_data <- covid_data %>%
+  rename(WHO_Region = `WHO.Region`)
+
+region_cfr <- covid_data %>%
+  group_by(WHO_Region) %>%
+  summarise(
+    n_countries = n(),
+    mean_CFR = round(mean(CFR, na.rm = TRUE), 3),
+    sd_CFR = round(sd(CFR, na.rm = TRUE), 3)
+  ) %>%
+  arrange(desc(mean_CFR))
+print(region_cfr)
+
+
+
+#EXPORT RESULTS
+
+
+# Create comprehensive results table
+results_summary <- covid_data %>%
+  group_by(Development_Status) %>%
+  summarise(
+    Countries = n(),
+    `Mean CFR (%)` = sprintf("%.3f", mean(CFR)),
+    `SD CFR (%)` = sprintf("%.3f", sd(CFR)),
+    `Median CFR (%)` = sprintf("%.3f", median(CFR)),
+    `Min CFR (%)` = sprintf("%.3f", min(CFR)),
+    `Max CFR (%)` = sprintf("%.3f", max(CFR)),
+    `Total Confirmed` = sum(Confirmed),
+    `Total Deaths` = sum(Deaths),
+    `Overall CFR (%)` = sprintf("%.3f", sum(Deaths)/sum(Confirmed)*100)
+  )
+
+cat("\n=== COMPREHENSIVE RESULTS SUMMARY ===\n")
+print(results_summary)
+
+# Export data and results
+write_csv(covid_data, "processed_covid_analysis.csv")
+write_csv(results_summary, "summary_statistics.csv")
+
+# Create a markdown report
+sink("analysis_report.md")
+cat("# COVID-19 Case Fatality Rate Analysis Report\n\n")
+cat("## Executive Summary\n\n")
+cat("This analysis investigates differences in COVID-19 Case Fatality Rates (CFR) between developed and developing countries.\n\n")
+cat("## Key Findings\n\n")
+cat("- **Dataset**:", nrow(covid_data), "countries analyzed\n")
+cat("- **Developed countries**:", sum(covid_data$Development_Status == "Developed"), "countries\n")
+cat("- **Developing countries**:", sum(covid_data$Development_Status == "Developing"), "countries\n")
+cat("- **Statistical test**: Welch's t-test (one-tailed)\n")
+cat("- **p-value**:", format.pval(p_value, digits = 4), "\n")
+cat("- **Decision**:", ifelse(p_value < 0.05, "Reject H₀", "Fail to reject H₀"), "\n")
+cat("- **Effect size (Cohen's d)**:", round(cohen_result$estimate, 4), "(", magnitude, ")\n")
+sink()
+
+
+#SESSION INFO FOR REPRODUCIBILITY
+
+cat("\n", strrep("=", 60), "\n", sep = "")
+cat("SESSION INFORMATION FOR REPRODUCIBILITY\n")
+cat(strrep("=", 60), "\n\n", sep = "")
+
+print(sessionInfo())
+
+cat("\n", strrep("=", 60), "\n", sep = "")
+cat("ANALYSIS COMPLETED SUCCESSFULLY\n")
+cat(strrep("=", 60), "\n\n", sep = "")
+
+cat("Output files generated:\n")
+cat("1. CFR_comparison_boxplot.png - Main comparison visualization\n")
+cat("2. CFR_distribution_histogram.png - Distribution analysis\n")
+cat("3. CFR_vs_cases_scatter.png - Additional insights\n")
+cat("4. processed_covid_analysis.csv - Processed dataset\n")
+cat("5. summary_statistics.csv - Summary statistics\n")
+cat("6. analysis_report.md - Text summary of findings\n")
+
