@@ -182,3 +182,63 @@ print(scatter_plot)
 ggsave("CFR_vs_cases_scatter.png", plot = scatter_plot, 
        width = 10, height = 6, dpi = 300, bg = "white")
 
+
+
+# statical analysis 
+
+# Extract CFR values by group
+developed_cfr <- covid_data %>% 
+  filter(Development_Status == "Developed") %>% 
+  pull(CFR)
+developing_cfr <- covid_data %>% 
+  filter(Development_Status == "Developing") %>% 
+  pull(CFR)
+
+# 1. Normality check (Shapiro-Wilk test)
+cat("\n1. Normality Test (Shapiro-Wilk):\n")
+shapiro_dev <- shapiro.test(developed_cfr)
+shapiro_develop <- shapiro.test(developing_cfr)
+
+cat("   Developed countries: W =", round(shapiro_dev$statistic, 4), 
+    ", p =", round(shapiro_dev$p.value, 4), "\n")
+cat("   Developing countries: W =", round(shapiro_develop$statistic, 4), 
+    ", p =", round(shapiro_develop$p.value, 4), "\n")
+
+# 2. Homogeneity of variances (Levene's Test)
+cat("\n2. Homogeneity of Variances (Levene's Test):\n")
+levene_result <- leveneTest(CFR ~ Development_Status, data = covid_data)
+cat("   F(", levene_result$Df[1], ",", levene_result$Df[2], ") =", 
+    round(levene_result$`F value`[1], 4), 
+    ", p =", round(levene_result$`Pr(>F)`[1], 4), "\n")
+
+# 3. Perform Welch's t-test (does not assume equal variances)
+cat("\n=== WELCH'S T-TEST RESULTS ===\n")
+t_test_result <- t.test(CFR ~ Development_Status, 
+                        data = covid_data,
+                        var.equal = FALSE,        # Welch's correction
+                        alternative = "less")     # One-tailed: developed < developing
+
+# Display results
+cat("\nWelch Two Sample t-test\n")
+cat("t(", round(t_test_result$parameter, 2), ") =", 
+    round(t_test_result$statistic, 4), "\n")
+cat("p-value =", format.pval(t_test_result$p.value, digits = 4), "\n")
+cat("95% Confidence Interval: [", 
+    round(t_test_result$conf.int[1], 4), ", ", 
+    round(t_test_result$conf.int[2], 4), "]\n")
+cat("Mean of Developed: ", round(t_test_result$estimate[1], 4), "\n")
+cat("Mean of Developing: ", round(t_test_result$estimate[2], 4), "\n")
+cat("Difference in means: ", 
+    round(t_test_result$estimate[1] - t_test_result$estimate[2], 4), "\n")
+
+# Calculate effect size (Cohen's d)
+cat("\n=== EFFECT SIZE ===\n")
+cohen_result <- cohen.d(CFR ~ Development_Status, data = covid_data)
+cat("Cohen's d =", round(cohen_result$estimate, 4), "\n")
+
+# Interpret effect size
+d_value <- abs(cohen_result$estimate)
+magnitude <- if(d_value < 0.2) "Negligible" else
+  if(d_value < 0.5) "Small" else
+    if(d_value < 0.8) "Medium" else "Large"
+cat("Effect size magnitude:", magnitude, "\n")
