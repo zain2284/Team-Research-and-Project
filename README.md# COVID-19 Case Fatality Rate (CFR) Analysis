@@ -17,3 +17,13 @@ It includes data preprocessing, visualization, statistical analysis, and results
 2. Make sure the dataset is in the `data/` folder
 3. Run the script to generate analysis and visualizations
 
+
+## install package in R studio 
+#tidyverse
+#dplyr
+#ggplot2
+#readr
+#countrycode
+#car  /// For Levene's test
+#effsize   /// For effect size
+#knitr    /// For nice tables
