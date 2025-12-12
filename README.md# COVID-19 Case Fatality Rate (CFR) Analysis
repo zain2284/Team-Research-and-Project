@@ -26,4 +26,4 @@ It includes data preprocessing, visualization, statistical analysis, and results
 #countrycode
 #car  /// For Levene's test
 #effsize   /// For effect size
-#knitr    /// For nice tables
+#knitr    /// For tables
