@@ -20,7 +20,7 @@ library(knitr)      # For tables
 
 
 # Setup the Path
-setwd("C:/Users/MCS/Documents/R file/")
+setwd("C:\\Users\\Zain Hassan\\OneDrive\\Desktop\\Team Research Group Projct-covid-19-data")
 # Load the dataset
 covid_data <- read.csv("country_wise_latest.csv", stringsAsFactors = FALSE)
 
